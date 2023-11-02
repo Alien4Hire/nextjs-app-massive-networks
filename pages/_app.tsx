@@ -1,5 +1,6 @@
 // pages/_app.js or pages/_app.tsx
 import { useEffect } from 'react';
+// import "../styles/global.scss";
 
 const MyApp = ({ Component, pageProps }) => {
   useEffect(() => {
