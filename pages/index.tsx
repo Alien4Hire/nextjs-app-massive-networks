@@ -1,18 +1,38 @@
 // @ts-nocheck
-import Link from "next/link";
 import Layout from "../components/Layout";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const IndexPage = () => {
-  const [searchRadius, setSearchRadius] = useState("1");
+  const [searchRadius, setSearchRadius] = useState("");
   const [searchAddress, setSearchAddress] = useState("");
+  const [counter, setCounter] = useState(0);
+  const [results, setResults] = useState([]);
+
+  const parseMarker = (input) => {
+    let newObj = {};
+    newObj.lat = parseFloat(input.lat);
+    newObj.lng = parseFloat(input.lng);
+    newObj.isDC = parseInt(input.isDC, 10);
+    newObj.isPOP = input.isPOP ? parseInt(input.isPOP, 10) : 0;
+    newObj.isCELL = input.isCELL ? parseInt(input.isCELL, 10) : 0;
+    newObj.fiberReady = parseInt(input.fiberReady, 10);
+    newObj.coaxReady = parseInt(input.coaxReady, 10);
+    newObj.wirelessReady = input.wirelessReady
+      ? parseInt(input.wirelessReady, 10)
+      : 0;
+    newObj.ethernetReady = input.ethernetReady
+      ? parseInt(input.ethernetReady, 10)
+      : 0;
+
+    return newObj;
+  };
 
   const search = async () => {
-    const lat = "37.9277412";
-    const lng = "-122.0589753";
-    const radius = "1";
-    const address = "1255 Treat Blvd, Walnut Creek, CA 94597, USA";
-    const center = "(37.9277412, -122.0589753)";
+    const lat = "-40.055429867763834";
+    const lng = "-83.04729663229006";
+    // const radius = "1";
+    // const address = "1255 Treat Blvd, Walnut Creek, CA 94597, USA";
+    const center = "(-40.055429867763834, -83.04729663229006)";
 
     const queryParams = new URLSearchParams({
       lat,
@@ -24,92 +44,93 @@ const IndexPage = () => {
     const apiUrl = `/api/maps?${queryParams}`;
 
     try {
+      const interval = setInterval(() => {
+        setCounter((prevCounter) => {
+          if (prevCounter !== 99) {
+            handleProgressBar(true, prevCounter + 1);
+            return prevCounter + 1;
+          }
+          return prevCounter;
+        });
+      }, 500);
       const res = await fetch(apiUrl);
+      clearInterval(interval);
+      setCounter(0);
       const body = await res.json();
-      const coords = body.map((marker) => ({
-        lat: parseFloat(marker.lat),
-        lng: parseFloat(marker.lng),
-        ...(marker.isDC !== "1" ? {} : { isDC: marker.isDC }),
-        ...(marker.isCELL !== "1" ? {} : { isCELL: marker.isCELL }),
-        ...(marker.isPOP !== "1" ? {} : { isPOP: marker.isPOP }),
-        ...(marker.wirelessReady !== "1"
-          ? {}
-          : { wirelessReady: marker.wirelessReady }),
-        ...(marker.fiberReady !== "1" ? {} : { fiberReady: marker.fiberReady }),
-      }));
+      const coords = body.map((marker) => parseMarker(marker));
       populateData(coords);
+      handleProgressBar(false, 0);
     } catch (error) {
       console.error("failed to fetch markers for the entered address");
     }
   };
 
   const populateData = (coords) => {
-    console.log(coords);
     const mapComponent = document.querySelector("mass-google-map");
     mapComponent.center = {
-      lat: coords[0]["lat"] || 37.7749,
-      lng: coords[0]["lng"] || -122.4194,
+      lat: coords[0]["lat"] || -40.055429867763834,
+      lng: coords[0]["lng"] || -83.04729663229006,
     };
     mapComponent.coordinates = coords;
-    mapComponent.legend = {
-      items: [
-        {
-          name: "mapCircle",
-          color: "purple",
-          title: "Fiber - Building",
-        },
-        {
-          name: "mapCircle",
-          color: "green",
-          title: "Fiber - DataCenter",
-        },
-        {
-          name: "mapCircle",
-          color: "orange",
-          title: "Fiber - Cell Site",
-        },
-        {
-          name: "mapCircle",
-          color: "red",
-          title: "Fiber - POP",
-        },
-        {
-          name: "wifi",
-          color: "purple",
-          title: "Fiber - Wireless",
-        },
-        {
-          name: "mapCircle",
-          color: "purple",
-          title: "Ethernet - Copper",
-        },
-        {
-          name: "mapCircle",
-          color: "black",
-          title: "Ethernet - Coax",
-        },
-      ],
-    };
-    console.log(mapComponent);
+    mapComponent.legend = [
+      {
+        name: "mapCircle",
+        color: "purple",
+        title: "Fiber - Building",
+      },
+      {
+        name: "mapCircle",
+        color: "green",
+        title: "Fiber - DataCenter",
+      },
+      {
+        name: "mapCircle",
+        color: "orange",
+        title: "Fiber - Cell Site",
+      },
+      {
+        name: "mapCircle",
+        color: "red",
+        title: "Fiber - POP",
+      },
+      {
+        name: "mapCircle",
+        color: "purple",
+        title: "Ethernet - Copper",
+      },
+      {
+        name: "mapCircle",
+        color: "black",
+        title: "Ethernet - Coax",
+      },
+    ];
+    mapComponent.zoom = parseInt(searchRadius) || 0;
+  };
+
+  const handleProgressBar = (isVisible, progress) => {
+    const progressBar = document.querySelector("mass-progress-bar");
+    progressBar.isVisible = isVisible;
+    progressBar.progress = progress;
   };
   return (
-    <Layout title="Home | Next.js + TypeScript Example">
-      <div className="bg-custom-gray flex flex-col min-h-screen container mx-auto px-4 ">
+    <Layout title="Massive Networks Lit Building Locator">
+      <mass-progress-bar />
+      <div className="flex flex-col min-h-screen">
         <div
           style={{ position: "relative", zIndex: 10, backgroundColor: "white" }}
         >
           {/* Top row with search input and buttons */}
           <div
             style={{ display: "flex", width: "100%", alignItems: "center" }}
-            className="bg-custom-gray flex w-full mb-4"
+            className="flex w-full"
           >
             <div
-              style={{ width: "38%", margin: "5px 10px" }}
-              className="w-full pr-4 mb-4 lg:mb-0"
+              style={{ width: "50%", margin: "5px 10px" }}
+              className="w-full"
             >
               <mass-text-field
                 label-position="left"
-                label-text="Search Location:"
+                label-text="Search Location"
                 input-placeholder-text="Placeholder"
                 input-type="text"
                 max-length={50}
@@ -124,8 +145,8 @@ const IndexPage = () => {
               />
             </div>
             <div
-              style={{ width: "38%", margin: "5px 10px" }}
-              className="w-full pr-4 mb-4 lg:mb-0"
+              style={{ width: "50%", margin: "5px 10px" }}
+              className="w-full mb-4 lg:mb-0"
             >
               <mass-select-field
                 input-id="input00"
@@ -171,10 +192,11 @@ const IndexPage = () => {
                 button-text="Search"
                 disabled={false}
                 icon-position="none"
-                size="large"
+                size="medium"
                 type="green"
                 tone="light"
                 onClick={search}
+                is-disabled={!searchAddress || !searchRadius}
               >
                 Search
               </mass-button>
@@ -183,9 +205,13 @@ const IndexPage = () => {
                 button-text="Reset Map"
                 disabled={false}
                 icon-position="none"
-                size="large"
+                size="medium"
                 type="red"
                 tone="light"
+                onClick={() => {
+                  setSearchAddress("");
+                  setSearchRadius("");
+                }}
               >
                 Reset Map
               </mass-button>
@@ -193,44 +219,25 @@ const IndexPage = () => {
           </div>
 
           {/* Second row with results select */}
-          <div style={{ paddingBottom: "10px" }} className="flex-none mb-4">
-            <mass-select-field
-              input-id="input00"
-              label="Results:"
-              type="light"
-              label-position="left"
-              is-disabled={false}
-              has-error={false}
-              error-message="Select valid distance"
-              options={JSON.stringify([
-                {
-                  name: "5406 CROSSINGS DR, ROCKLIN, CA 95677",
-                  value: "5406 CROSSINGS DR, ROCKLIN, CA 95677",
-                },
-                {
-                  name: "8050 N PALM AVE, FRESNO, CA, 93711-5510, US",
-                  value: "8050 N PALM AVE, FRESNO, CA, 93711-5510, US",
-                },
-                {
-                  name: "4615 SARATOGA PL, HUBER HEIGHTS, OH, 45424-3683, US",
-                  value: "4615 SARATOGA PL, HUBER HEIGHTS, OH, 45424-3683, US",
-                },
-                {
-                  name: "4615 SARATOGA PL, HUBER HEIGHTS, OH, 45424, US",
-                  value: "4615 SARATOGA PL, HUBER HEIGHTS, OH, 45424, US",
-                },
-                {
-                  name: "255 OLD SANFORD OVIEDO RD, WINTER SPRINGS, FL, 32708-2651, US",
-                  value:
-                    "255 OLD SANFORD OVIEDO RD, WINTER SPRINGS, FL, 32708-2651, US",
-                },
-                {
-                  name: "255 OLD SANFORD OVIEDO RD, WINTER SPGS, FL, 32708, US",
-                  value:
-                    "255 OLD SANFORD OVIEDO RD, WINTER SPGS, FL, 32708, US",
-                },
-              ])}
-            />
+          <div
+            style={{ display: "flex", width: "100%", alignItems: "center" }}
+            className="flex w-full"
+          >
+            <div
+              style={{ width: "100%", margin: "5px 10px" }}
+              className="w-full"
+            >
+              <mass-select-field
+                input-id="input00"
+                label="Results:"
+                type="light"
+                label-position="left"
+                is-disabled={false}
+                has-error={false}
+                error-message="Select valid distance"
+                options={JSON.stringify(results)}
+              />
+            </div>
           </div>
         </div>
 
