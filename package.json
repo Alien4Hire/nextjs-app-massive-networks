@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "autoprefixer": "^10.4.16",
-    "jami-massive-networks-shared-web-components": "^0.1.26",
     "massive-networks-shared-web-components": "^0.1.28",
     "next": "latest",
     "node-fetch": "^3.3.2",
