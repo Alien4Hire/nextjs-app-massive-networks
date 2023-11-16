@@ -28,11 +28,11 @@ const IndexPage = () => {
   };
 
   const search = async () => {
-    const lat = "-40.055429867763834";
-    const lng = "-83.04729663229006";
+    const lat = "39.9654502";
+    const lng = "-105.1241617";
     // const radius = "1";
     // const address = "1255 Treat Blvd, Walnut Creek, CA 94597, USA";
-    const center = "(-40.055429867763834, -83.04729663229006)";
+    const center = "(39.9654502, -105.1241617)";
 
     const queryParams = new URLSearchParams({
       lat,
@@ -68,8 +68,8 @@ const IndexPage = () => {
   const populateData = (coords) => {
     const mapComponent = document.querySelector("mass-google-map");
     mapComponent.center = {
-      lat: coords[0]["lat"] || -40.055429867763834,
-      lng: coords[0]["lng"] || -83.04729663229006,
+      lat: coords[0]["lat"] || 39.9654502,
+      lng: coords[0]["lng"] || -105.1241617,
     };
     mapComponent.coordinates = coords;
     mapComponent.legend = [

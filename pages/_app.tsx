@@ -4,7 +4,7 @@ import "../styles/global.scss";
 
 const MyApp = ({ Component, pageProps }) => {
   useEffect(() => {
-    import("massive-networks-shared-web-components/loader").then(
+    import("jami-massive-networks-shared-web-components/loader").then(
       (module) => {
         module.defineCustomElements(window);
       }
