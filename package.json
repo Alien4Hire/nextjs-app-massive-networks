@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "autoprefixer": "^10.4.16",
-    "massive-networks-shared-web-components": "^0.1.28",
+    "massive-networks-shared-web-components": "^0.1.27",
     "next": "latest",
     "node-fetch": "^3.3.2",
     "postcss": "^8.4.31",
