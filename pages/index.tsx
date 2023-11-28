@@ -1,6 +1,7 @@
 // @ts-nocheck
 import Layout from "../components/Layout";
 import { useState, useEffect } from "react";
+import ServiceInquiryModal from "../components/ServiceInquiryModal";
 
 const IndexPage = () => {
   const [searchRadius, setSearchRadius] = useState("");
@@ -9,6 +10,9 @@ const IndexPage = () => {
   const [counter, setCounter] = useState(0);
   const [results, setResults] = useState([]);
   const [savedSearches, setSavedSearches] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalDetails, setModalDetails] = useState({});
+  const [successToast, setSuccessToast] = useState(false);
 
   useEffect(() => {
     loadSearchesFromLocalStorage();
@@ -21,6 +25,7 @@ const IndexPage = () => {
 
   const parseMarker = (input) => {
     let newObj = {};
+    newObj.id = input.id;
     newObj.lat = parseFloat(input.lat);
     newObj.lng = parseFloat(input.lng);
     newObj.isDC = parseInt(input.isDC, 10);
@@ -34,6 +39,11 @@ const IndexPage = () => {
     newObj.ethernetReady = input.ethernetReady
       ? parseInt(input.ethernetReady, 10)
       : 0;
+    newObj.address = input.address;
+    newObj.distance = input.distance;
+    newObj.CID = input.CID;
+    newObj.target = input.target;
+    newObj.paths = input.paths;
 
     return newObj;
   };
@@ -93,46 +103,52 @@ const IndexPage = () => {
   };
 
   const populateData = (coords, manualRadius = "") => {
-    console.log(manualRadius, "manualRadius");
+    setDisplayLeftMenu(false);
     const mapComponent = document.querySelector("mass-google-map");
     mapComponent.center = {
       lat: coords[0]["lat"] || 39.9654502,
       lng: coords[0]["lng"] || -105.1241617,
     };
-    mapComponent.coordinates = coords;
+    mapComponent.searchResults = coords;
     mapComponent.legend = [
       {
-        name: "mapCircle",
+        name: "markerPurple",
         color: "purple",
         title: "Fiber - Building",
       },
       {
-        name: "mapCircle",
+        name: "markerGreen",
         color: "green",
         title: "Fiber - DataCenter",
       },
       {
-        name: "mapCircle",
+        name: "markerOrange",
         color: "orange",
         title: "Fiber - Cell Site",
       },
       {
-        name: "mapCircle",
+        name: "markerRed",
         color: "red",
         title: "Fiber - POP",
       },
       {
-        name: "mapCircle",
+        name: "wifi",
+        color: "purple",
+        title: "Fiber - Wireless",
+      },
+      {
+        name: "markerPurple",
         color: "purple",
         title: "Ethernet - Copper",
       },
       {
-        name: "mapCircle",
+        name: "markerWhite",
         color: "black",
         title: "Ethernet - Coax",
       },
     ];
     mapComponent.zoom = parseInt(manualRadius || searchRadius) || 0;
+    mapComponent.handleGetQuote = handleGetQuote;
   };
 
   const handleProgressBar = (isVisible, progress) => {
@@ -140,9 +156,78 @@ const IndexPage = () => {
     progressBar.isVisible = isVisible;
     progressBar.progress = progress;
   };
+
+  const handleGetQuote = (detail) => {
+    setModalDetails({
+      address: detail.address,
+      recordID: detail.id,
+      center: encodeURI(`(${detail.lat}, ${detail.lng})`),
+      carriers: detail.CID,
+    });
+    setIsModalVisible(true);
+  };
   return (
     <Layout title="Massive Networks Lit Building Locator">
       <mass-progress-bar />
+      {isModalVisible && (
+        <ServiceInquiryModal
+          isVisible={isModalVisible}
+          details={modalDetails}
+          onClose={() => {
+            setIsModalVisible(false);
+            setSuccessToast(true);
+          }}
+        />
+      )}
+
+      {successToast && (
+        <div
+          id="toast-success"
+          class="flex items-center w-full max-w-xs p-4 mr-4 mt-4 text-gray-500 bg-white rounded-lg shadow z-[100] absolute top-0 right-0"
+          role="alert"
+          onClick={() => setSuccessToast(false)}
+        >
+          <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg">
+            <svg
+              class="w-5 h-5"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z" />
+            </svg>
+            <span class="sr-only">Check icon</span>
+          </div>
+          <div class="ms-3 text-sm font-normal">
+            Quote submitted successfully
+          </div>
+          <button
+            type="button"
+            class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8"
+            data-dismiss-target="#toast-success"
+            aria-label="Close"
+          >
+            <span class="sr-only">Close</span>
+            <svg
+              class="w-3 h-3"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 14 14"
+            >
+              <path
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {displayLeftMenu && (
         <mass-leftmenu>
           <div className="flex flex-col items-center p-4">
