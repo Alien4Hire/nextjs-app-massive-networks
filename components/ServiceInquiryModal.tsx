@@ -30,6 +30,7 @@ const ServiceInquiryModal: React.FC<ServiceInquiryModalProps> = ({
     officeToOffice: false,
   });
   const [captchaValue, setCaptchaValue] = useState("");
+  const [isEmailValid, setIsEmailValid] = useState(true)
 
   useEffect(() => {
     const checkboxComponent = document.querySelector("mass-checkbox-group");
@@ -129,7 +130,7 @@ const ServiceInquiryModal: React.FC<ServiceInquiryModalProps> = ({
                 label-position="top"
                 label-text="Your Phone Number"
                 input-placeholder-text="Placeholder"
-                input-type="text"
+                input-type="number"
                 max-length={50}
                 value={phone}
                 ref={(el) => {
@@ -148,13 +149,23 @@ const ServiceInquiryModal: React.FC<ServiceInquiryModalProps> = ({
                 label-position="top"
                 label-text="Your Email"
                 input-placeholder-text="Placeholder"
-                input-type="text"
+                input-type="email"
+                error-text="Invalid email format e.g: bob@gmail.com"
+                is-valid={isEmailValid}
                 max-length={50}
                 value={email}
                 ref={(el) => {
                   if (el) {
                     el.addEventListener("valueChange", (event) => {
-                      setEmail(event.detail);
+                      console.log(event.detail,"asdf",email)
+                      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                      if(emailRegex.test(event.detail)){
+                        setEmail(event.detail);
+                        setIsEmailValid(true)
+                      }
+                      else{
+                        setIsEmailValid(false)
+                      }
                     });
                   }
                 }}
@@ -246,9 +257,9 @@ const ServiceInquiryModal: React.FC<ServiceInquiryModalProps> = ({
           <RecaptchaComponent onChange={handleCaptchaChange} />
 
           <button
-            className={`${!name || !company || !email || !phone || !serviceSpeed || !captchaValue ? 'bg-gray-500': 'bg-blue-500'} hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-2`}
+            className={`${!name || !company || !email || !phone || !serviceSpeed || !captchaValue || !isEmailValid ? 'bg-gray-500': 'bg-blue-500'} hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-2`}
             onClick={handleSubmit}
-            disabled={!name || !company || !email || !phone || !serviceSpeed || !captchaValue}
+            disabled={!name || !company || !email || !phone || !serviceSpeed || !captchaValue || !isEmailValid}
           >
             Submit
           </button>
