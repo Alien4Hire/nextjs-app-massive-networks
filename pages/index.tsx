@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import ServiceInquiryModal from "../components/ServiceInquiryModal";
 
 const IndexPage = () => {
-  const [searchRadius, setSearchRadius] = useState("");
+  const [searchRadius, setSearchRadius] = useState("1");
   const [searchAddress, setSearchAddress] = useState("");
   const [displayLeftMenu, setDisplayLeftMenu] = useState(false);
   const [counter, setCounter] = useState(0);
@@ -16,7 +16,7 @@ const IndexPage = () => {
 
   useEffect(() => {
     loadSearchesFromLocalStorage();
-  }, []);
+  }, [displayLeftMenu]);
 
   const loadSearchesFromLocalStorage = () => {
     const savedSearches = JSON.parse(localStorage.getItem("searches")) || [];
@@ -134,7 +134,7 @@ const IndexPage = () => {
       {
         name: "wifi",
         color: "purple",
-        title: "Fiber - Wireless",
+        title: "Wireless - Fixed",
       },
       {
         name: "markerPurple",
@@ -166,6 +166,15 @@ const IndexPage = () => {
     });
     setIsModalVisible(true);
   };
+
+  const handleLastSearch = (value) => {
+    const savedSearches = JSON.parse(localStorage.getItem("searches")) || [];
+    const filteredSearches = savedSearches.filter((item) =>
+      item.search.searchAddress.toLowerCase().includes(value.toLowerCase())
+    );
+    setSavedSearches(filteredSearches);
+  }
+
   return (
     <Layout title="Massive Networks Lit Building Locator">
       <mass-progress-bar />
@@ -248,6 +257,26 @@ const IndexPage = () => {
             </svg>
 
             <h1>Last Searches</h1>
+            <div
+              style={{ width: "90%", margin: "5px 10px" }}
+              className="w-full"
+            >
+              <mass-text-field
+                label-position="left"
+                label-text="Search"
+                input-placeholder-text="Placeholder"
+                input-type="text"
+                max-length={50}
+                value={searchAddress}
+                ref={(el) => {
+                  if (el) {
+                    el.addEventListener("valueChange", (event) => {
+                      handleLastSearch(event.detail)
+                    });
+                  }
+                }}
+              />
+            </div>
           </div>
           <div className="flex flex-col items-center overflow-y-auto h-screen">
             {savedSearches.map((item, index) => (
@@ -352,12 +381,11 @@ const IndexPage = () => {
                 ref
                 error-message="No this is wrong"
                 options={JSON.stringify([
-                  { name: "-", value: "-" },
+                  { name: "1", value: "1 km" },
                   { name: "200", value: "200 kms" },
                   { name: "20", value: "20 kms" },
                   { name: "10", value: "10 kms" },
                   { name: "5", value: "5 kms" },
-                  { name: "1", value: "1 km" },
                   { name: ".5", value: ".5 km (1600ft)" },
                   { name: ".3", value: ".3 km (1000ft)" },
                 ])}
@@ -403,7 +431,7 @@ const IndexPage = () => {
                 tone="light"
                 onClick={() => {
                   setSearchAddress("");
-                  setSearchRadius("");
+                  setSearchRadius("1");
                 }}
               >
                 Reset
@@ -450,7 +478,7 @@ const IndexPage = () => {
 
         {/* Map component */}
         <div className="flex-grow w-full" style={{ width: "100%", zIndex: 1 }}>
-          <mass-google-map style={{ width: "100%" }} />
+          <mass-google-map style={{ width: "100%", position: "relative" }} />
         </div>
       </div>
     </Layout>
